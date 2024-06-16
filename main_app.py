@@ -9,6 +9,19 @@ from kivy.uix.textinput import TextInput
 from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
 from instructions import txt_instruction, txt_test1, txt_test2, txt_test3, txt_sits
+from seconds import Seconds
+
+age = 7
+name = ""
+p1, p2, p3 = 0, 0, 0
+
+def check_int(str_num):
+    try:
+        return int(str_num)
+    except:
+        return False
+
+
 
 class InstrScr(Screen):
     def __init__(self, **kwargs):
@@ -37,18 +50,30 @@ class InstrScr(Screen):
         self.add_widget(outer)
         
     def next(self):
-        self.manager.current = "pulse1"
+        global name,age
+        name = self.in_name.text
+        age = check_int(self.in_age.text)
+        if age == False or age < 7:
+            age = 7
+            self.in_age.text = str(age)
+        else:
+            self.manager.current = "pulse1"
 
 
 class PulseScr(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        self.next_screen = False
+        
         instr = Label(text=txt_test1)
+        self.lbl_sec = Seconds(3)
+        self.lbl_sec.bind(done=self.sec_finished)
 
         line = BoxLayout(size_hint=(0.8, None), height="30sp")
         lbl_result = Label(text="Введіть результат:", halign="right")
         self.in_result = TextInput(text="0", multiline=False)
+        self.in_result.set_disabled(True)
 
         line.add_widget(lbl_result)
         line.add_widget(self.in_result)
@@ -58,11 +83,29 @@ class PulseScr(Screen):
         self.btn.on_press = self.next
         outer = BoxLayout(orientation="vertical", padding=8, spacing=8)
         outer.add_widget(instr)
+        outer.add_widget(self.lbl_sec)
         outer.add_widget(line)
         outer.add_widget(self.btn)
         self.add_widget(outer)
+        
+    def sec_finished(self, *args):
+        self.next_screen = True
+        self.in_result.set_disabled(False)
+        self.btn.set_disabled(False)
+        self.btn.text = "Продовжити"
+        
     def next(self):
-        self.manager.current = "sits"
+        if self.next_screen == False:
+            self.btn.set_disabled(True)
+            self.lbl_sec.start()
+        else:
+            global p1
+            p1 = check_int(self.in_result.text)
+            if p1 == False or p1 <=0:
+                p1 = 0
+                self.in_result.text = str(p1)
+            else:
+                self.manager.current = "sits"
 
 class CheckSits(Screen):
     def __init__(self, **kwargs):
